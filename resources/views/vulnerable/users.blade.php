@@ -46,12 +46,14 @@
                     @endif
                 </div>
 
-                <h5>Results ({{ is_array($users) ? count($users) : $users->count() }} found):</h5>
                 @php
-                    $userCount = is_array($users) ? count($users) : $users->count();
+                    // Convert array to collection if needed
+                    $usersCollection = is_array($users) ? collect($users) : $users;
                 @endphp
+
+                <h5>Results ({{ $usersCollection->count() }} found):</h5>
                 
-                @if($userCount > 0)
+                @if($usersCollection->count() > 0)
                     <table class="table table-striped">
                         <thead>
                             <tr>
@@ -62,14 +64,18 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach($users as $user)
+                            @foreach($usersCollection as $user)
                                 <tr>
-                                    <td>{{ $user->id ?? $user['id'] }}</td>
-                                    <td>{{ $user->name ?? $user['name'] }}</td>
-                                    <td>{{ $user->email ?? $user['email'] }}</td>
+                                    <td>{{ is_object($user) ? $user->id : $user['id'] }}</td>
+                                    <td>{{ is_object($user) ? $user->name : $user['name'] }}</td>
+                                    <td>{{ is_object($user) ? $user->email : $user['email'] }}</td>
                                     <td>
                                         @php
-                                            $isAdmin = $user->is_admin ?? $user['is_admin'] ?? false;
+                                            if (is_object($user)) {
+                                                $isAdmin = $user->is_admin ?? false;
+                                            } else {
+                                                $isAdmin = $user['is_admin'] ?? false;
+                                            }
                                         @endphp
                                         @if($isAdmin)
                                             <span class="badge bg-danger">Admin</span>
