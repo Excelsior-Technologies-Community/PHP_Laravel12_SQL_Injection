@@ -151,6 +151,13 @@
                         </a>
                     </li>
 
+                    <li class="nav-item">
+                        <a class="nav-link text-warning"
+                            href="{{ route('attack.logs') }}">
+                            Attack Logs
+                        </a>
+                    </li>
+
                 </ul>
 
             </div>
