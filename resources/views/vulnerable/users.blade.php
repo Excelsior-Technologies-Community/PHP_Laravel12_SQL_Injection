@@ -141,6 +141,79 @@
     </div>
 
 
+    <div class="row mb-4">
+
+        <div class="col-md-6">
+
+            <div class="card border-info shadow-sm">
+
+                <div class="card-body text-center">
+
+                    <h6 class="text-muted">
+
+                        Query Execution Time
+
+                    </h6>
+
+                    <h2 class="text-info fw-bold">
+
+                        {{ $executionTime }} ms
+
+                    </h2>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="col-md-6">
+
+            <div class="card border-success shadow-sm">
+
+                <div class="card-body text-center">
+
+                    <h6 class="text-muted">
+
+                        Performance
+
+                    </h6>
+
+                    @if($performance == 'Fast')
+
+                    <span class="badge bg-success fs-6">
+
+                        🚀 Fast
+
+                    </span>
+
+                    @elseif($performance == 'Moderate')
+
+                    <span class="badge bg-warning fs-6">
+
+                        ⚡ Moderate
+
+                    </span>
+
+                    @else
+
+                    <span class="badge bg-danger fs-6">
+
+                        🐢 Slow
+
+                    </span>
+
+                    @endif
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
 
     <!-- Query Details -->
 
@@ -198,6 +271,50 @@ DB::table('users')
     ->where('name','LIKE',"%$search%")
     ->orWhere('email','LIKE',"%$search%")
 </pre>
+
+            @endif
+
+        </div>
+
+    </div>
+
+    <div class="card shadow-sm mb-4">
+
+        <div class="card-header bg-info text-white">
+
+            Performance Analysis
+
+        </div>
+
+        <div class="card-body">
+
+            <p>
+
+                <strong>Execution Time:</strong>
+
+                {{ $executionTime }} ms
+
+            </p>
+
+            @if(str_contains($method,'Unsafe'))
+
+            <div class="alert alert-danger">
+
+                This example is intentionally vulnerable.
+                Performance may appear similar to safe methods,
+                but it exposes your application to SQL Injection attacks.
+
+            </div>
+
+            @else
+
+            <div class="alert alert-success">
+
+                This query uses Laravel's secure database features.
+                Parameter binding protects against SQL Injection while
+                maintaining efficient query execution.
+
+            </div>
 
             @endif
 
