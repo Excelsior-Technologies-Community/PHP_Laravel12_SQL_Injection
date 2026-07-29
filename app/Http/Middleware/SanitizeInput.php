@@ -5,40 +5,77 @@ namespace App\Http\Middleware;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use App\Models\AttackLog;
 
 class SanitizeInput
 {
     public function handle(Request $request, Closure $next)
     {
-        $input = $request->all();
-        
-        array_walk_recursive($input, function (&$value) {
-            // Remove potentially dangerous SQL keywords (additional layer of security)
-            $dangerousPatterns = [
-                '/\bDROP\b/i',
-                '/\bDELETE\b/i',
-                '/\bINSERT\b/i',
-                '/\bUPDATE\b/i',
-                '/\bALTER\b/i',
-                '/\bEXEC(\s|\()+.*/i',
-                '/\bUNION\b/i',
-                '/--/',
-                '/;/'
-            ];
-            
-            // For demonstration, just log suspicious patterns
-            foreach ($dangerousPatterns as $pattern) {
+        $patterns = [
+
+            '/DROP/i',
+
+            '/DELETE/i',
+
+            '/INSERT/i',
+
+            '/UPDATE/i',
+
+            '/ALTER/i',
+
+            '/UNION/i',
+
+            '/SELECT/i',
+
+            '/--/',
+
+            '/;/',
+
+            '/OR\s+1=1/i',
+
+            '/\'\s*OR\s*\'1\'=\'1/i'
+
+        ];
+
+        foreach ($request->all() as $value) {
+
+            if (!is_string($value)) {
+                continue;
+            }
+
+            foreach ($patterns as $pattern) {
+
                 if (preg_match($pattern, $value)) {
-                    Log::warning('Suspicious input detected', [
-                        'input' => $value,
-                        'pattern' => $pattern
+
+                    Log::warning('SQL Injection Attempt', [
+
+                        'payload' => $value,
+
+                        'ip' => $request->ip(),
+
+                        'route' => $request->path()
+
                     ]);
+
+                    AttackLog::create([
+
+                        'ip_address' => $request->ip(),
+
+                        'route' => $request->path(),
+
+                        'payload' => $value,
+
+                        'pattern' => $pattern,
+
+                        'method' => $request->method()
+
+                    ]);
+
+                    break;
                 }
             }
-        });
-        
-        // Note: We're not modifying the input, just logging
-        // In production, you might want to sanitize or reject
+        }
+
         return $next($request);
     }
 }

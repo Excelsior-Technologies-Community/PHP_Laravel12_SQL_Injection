@@ -12,13 +12,29 @@ class VulnerableUserController extends Controller
     /**
      * Dashboard Statistics
      */
-    private function statistics($users = null)
+    private function statistics($users = null, $executionTime = 0)
     {
         return [
+
             'totalUsers'   => User::count(),
+
             'adminUsers'   => User::where('is_admin', 1)->count(),
+
             'normalUsers'  => User::where('is_admin', 0)->count(),
+
             'searchResult' => $users ? $users->total() : User::count(),
+
+            'executionTime' => $executionTime,
+
+            'performance' => match (true) {
+
+                $executionTime < 2 => 'Fast',
+
+                $executionTime < 5 => 'Moderate',
+
+                default => 'Slow',
+            }
+
         ];
     }
 
@@ -31,28 +47,37 @@ class VulnerableUserController extends Controller
     {
         $search = $request->search ?? '';
 
+        $start = microtime(true);
+
         if ($request->has('export')) {
+
             $users = DB::select("
-                SELECT * FROM users
-                WHERE name LIKE '%$search%'
-                OR email LIKE '%$search%'
-            ");
+            SELECT * FROM users
+            WHERE name LIKE '%$search%'
+            OR email LIKE '%$search%'
+        ");
 
             return $this->exportCsv($users);
         }
 
         $users = User::whereRaw("
-                    name LIKE '%$search%'
-                    OR email LIKE '%$search%'
-                ")
+            name LIKE '%$search%'
+            OR email LIKE '%$search%'
+        ")
             ->paginate(5)
             ->appends($request->all());
 
+        $executionTime = round((microtime(true) - $start) * 1000, 2);
+
         return view('vulnerable.users', [
-            'users'  => $users,
+
+            'users' => $users,
+
             'search' => $search,
-            'method' => 'Unsafe Raw SQL'
-        ] + $this->statistics($users));
+
+            'method' => 'Unsafe Raw SQL',
+
+        ] + $this->statistics($users, $executionTime));
     }
 
     /**
@@ -63,6 +88,8 @@ class VulnerableUserController extends Controller
     public function unsafeWhereRaw(Request $request)
     {
         $search = $request->search ?? '';
+
+        $start = microtime(true);
 
         if ($request->has('export')) {
 
@@ -78,13 +105,18 @@ class VulnerableUserController extends Controller
             ->paginate(5)
             ->appends($request->all());
 
-        return view('vulnerable.users', [
-            'users'  => $users,
-            'search' => $search,
-            'method' => 'Unsafe whereRaw()'
-        ] + $this->statistics($users));
-    }
+        $executionTime = round((microtime(true) - $start) * 1000, 2);
 
+        return view('vulnerable.users', [
+
+            'users' => $users,
+
+            'search' => $search,
+
+            'method' => 'Unsafe whereRaw()',
+
+        ] + $this->statistics($users, $executionTime));
+    }
     /**
      * ===========================================
      * SAFE PARAMETERIZED SQL
@@ -94,12 +126,14 @@ class VulnerableUserController extends Controller
     {
         $search = $request->search ?? '';
 
+        $start = microtime(true);
+
         if ($request->has('export')) {
 
             $users = DB::select(
                 "SELECT * FROM users
-                 WHERE name LIKE ?
-                 OR email LIKE ?",
+             WHERE name LIKE ?
+             OR email LIKE ?",
                 ["%$search%", "%$search%"]
             );
 
@@ -113,13 +147,18 @@ class VulnerableUserController extends Controller
         })->paginate(5)
             ->appends($request->all());
 
-        return view('vulnerable.users', [
-            'users'  => $users,
-            'search' => $search,
-            'method' => 'Safe Parameterized SQL'
-        ] + $this->statistics($users));
-    }
+        $executionTime = round((microtime(true) - $start) * 1000, 2);
 
+        return view('vulnerable.users', [
+
+            'users' => $users,
+
+            'search' => $search,
+
+            'method' => 'Safe Parameterized SQL',
+
+        ] + $this->statistics($users, $executionTime));
+    }
     /**
      * ===========================================
      * SAFE ELOQUENT
@@ -128,6 +167,8 @@ class VulnerableUserController extends Controller
     public function safeEloquent(Request $request)
     {
         $search = $request->search ?? '';
+
+        $start = microtime(true);
 
         if ($request->has('export')) {
 
@@ -147,11 +188,17 @@ class VulnerableUserController extends Controller
         })->paginate(5)
             ->appends($request->all());
 
+        $executionTime = round((microtime(true) - $start) * 1000, 2);
+
         return view('vulnerable.users', [
-            'users'  => $users,
+
+            'users' => $users,
+
             'search' => $search,
-            'method' => 'Safe Eloquent ORM'
-        ] + $this->statistics($users));
+
+            'method' => 'Safe Eloquent ORM',
+
+        ] + $this->statistics($users, $executionTime));
     }
 
     /**
@@ -162,6 +209,8 @@ class VulnerableUserController extends Controller
     public function safeQueryBuilder(Request $request)
     {
         $search = $request->search ?? '';
+
+        $start = microtime(true);
 
         if ($request->has('export')) {
 
@@ -180,11 +229,17 @@ class VulnerableUserController extends Controller
         })->paginate(5)
             ->appends($request->all());
 
+        $executionTime = round((microtime(true) - $start) * 1000, 2);
+
         return view('vulnerable.users', [
-            'users'  => $users,
+
+            'users' => $users,
+
             'search' => $search,
-            'method' => 'Safe Query Builder'
-        ] + $this->statistics($users));
+
+            'method' => 'Safe Query Builder',
+
+        ] + $this->statistics($users, $executionTime));
     }
 
     /**

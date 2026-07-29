@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\VulnerableUserController;
+use App\Http\Controllers\AttackLogController;
 
 /*
 |--------------------------------------------------------------------------
@@ -86,3 +87,19 @@ Route::get('/safe-querybuilder/export', function () {
     request()->merge(['export' => 1]);
     return app(VulnerableUserController::class)->safeQueryBuilder(request());
 })->name('safe.queryBuilder.export');
+
+
+Route::get('/attack-logs', [
+    AttackLogController::class,
+    'index'
+])->name('attack.logs');
+
+Route::delete('/attack-logs/{id}', [
+    AttackLogController::class,
+    'destroy'
+])->name('attack.logs.delete');
+
+Route::delete('/attack-logs', [
+    AttackLogController::class,
+    'clear'
+])->name('attack.logs.clear');
