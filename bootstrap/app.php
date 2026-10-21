@@ -16,6 +16,15 @@ return Application::configure(basePath: dirname(__DIR__))
             \App\Http\Middleware\SanitizeInput::class,
         ]);
 
+        $middleware->validateCsrfTokens(except: [
+            'exploit-playground/*',
+            'query-visualizer/*',
+            'waf-guard/*',
+            'auth-bypass-arena/*',
+            'blind-sqli-lab/*',
+            'security-scanner/*',
+        ]);
+
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //
