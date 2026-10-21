@@ -6,14 +6,83 @@
 
     <!-- Header -->
     <div class="card shadow-sm border-0 mb-4">
-        <div class="card-body text-center">
-            <h2 class="fw-bold text-primary">
-                Laravel 12 SQL Injection Prevention Demo
+        <div class="card-body text-center p-4">
+            <h2 class="fw-bold text-primary mb-2">
+                <i class="bi bi-shield-lock-fill text-danger me-2"></i>Laravel 12 SQL Injection Defense & Security Lab
             </h2>
-
-            <p class="text-muted mb-0">
-                Learn the difference between vulnerable SQL queries and secure Laravel database queries.
+            <p class="text-secondary mb-0">
+                Interactive laboratory comparing vulnerable raw queries with secure PDO prepared statements, AST visualizers, WAF firewall guards, authentication arenas, and static code audit tools.
             </p>
+        </div>
+    </div>
+
+    <!-- Advanced Security Suites -->
+    <div class="card border-0 shadow-sm p-4 mb-4 bg-white">
+        <h5 class="fw-bold text-dark mb-3"><i class="bi bi-stars text-warning me-2"></i>Advanced Security Modules & Interactive Labs</h5>
+        <div class="row g-3">
+            <div class="col-md-3">
+                <a href="{{ route('playground.index') }}" class="text-decoration-none">
+                    <div class="p-3 border rounded-3 h-100 bg-light hover-shadow transition">
+                        <div class="text-danger fs-3 mb-2"><i class="bi bi-lightning-charge-fill"></i></div>
+                        <h6 class="fw-bold text-dark mb-1">Exploit Playground</h6>
+                        <small class="text-muted">1-Click attack vector simulator comparing Safe vs Unsafe side-by-side.</small>
+                    </div>
+                </a>
+            </div>
+            <div class="col-md-3">
+                <a href="{{ route('visualizer.index') }}" class="text-decoration-none">
+                    <div class="p-3 border rounded-3 h-100 bg-light hover-shadow transition">
+                        <div class="text-info fs-3 mb-2"><i class="bi bi-cpu-fill"></i></div>
+                        <h6 class="fw-bold text-dark mb-1">AST Query Visualizer</h6>
+                        <small class="text-muted">Token stream inspection and PDO prepared parameter bindings table.</small>
+                    </div>
+                </a>
+            </div>
+            <div class="col-md-3">
+                <a href="{{ route('waf.index') }}" class="text-decoration-none">
+                    <div class="p-3 border rounded-3 h-100 bg-light hover-shadow transition">
+                        <div class="text-success fs-3 mb-2"><i class="bi bi-shield-shaded"></i></div>
+                        <h6 class="fw-bold text-dark mb-1">Real-Time WAF Guard</h6>
+                        <small class="text-muted">Dynamic firewall with Monitor, Sanitize, and IP Quarantine modes.</small>
+                    </div>
+                </a>
+            </div>
+            <div class="col-md-3">
+                <a href="{{ route('auth.bypass.index') }}" class="text-decoration-none">
+                    <div class="p-3 border rounded-3 h-100 bg-light hover-shadow transition">
+                        <div class="text-danger fs-3 mb-2"><i class="bi bi-key-fill"></i></div>
+                        <h6 class="fw-bold text-dark mb-1">Auth Bypass Arena</h6>
+                        <small class="text-muted">Classic comment-based admin authentication bypass vs secure Auth.</small>
+                    </div>
+                </a>
+            </div>
+            <div class="col-md-4">
+                <a href="{{ route('blind.index') }}" class="text-decoration-none">
+                    <div class="p-3 border rounded-3 h-100 bg-light hover-shadow transition">
+                        <div class="text-warning fs-3 mb-2"><i class="bi bi-stopwatch-fill"></i></div>
+                        <h6 class="fw-bold text-dark mb-1">Blind SQLi Lab</h6>
+                        <small class="text-muted">Time-delay latency graph and automated byte-by-byte boolean extractor.</small>
+                    </div>
+                </a>
+            </div>
+            <div class="col-md-4">
+                <a href="{{ route('scanner.index') }}" class="text-decoration-none">
+                    <div class="p-3 border rounded-3 h-100 bg-light hover-shadow transition">
+                        <div class="text-primary fs-3 mb-2"><i class="bi bi-search"></i></div>
+                        <h6 class="fw-bold text-dark mb-1">Static Security Scanner</h6>
+                        <small class="text-muted">Live static code analysis identifying unsafe query patterns across files.</small>
+                    </div>
+                </a>
+            </div>
+            <div class="col-md-4">
+                <a href="{{ route('threat.index') }}" class="text-decoration-none">
+                    <div class="p-3 border rounded-3 h-100 bg-light hover-shadow transition">
+                        <div class="text-info fs-3 mb-2"><i class="bi bi-bar-chart-line-fill"></i></div>
+                        <h6 class="fw-bold text-dark mb-1">Threat Intelligence</h6>
+                        <small class="text-muted">Aggregated attack logs, target routes, and OWASP A03:2021 compliance checklist.</small>
+                    </div>
+                </a>
+            </div>
         </div>
     </div>
 

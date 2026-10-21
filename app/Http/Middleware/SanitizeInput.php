@@ -2,76 +2,94 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\AttackLog;
+use App\Services\WafService;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
-use App\Models\AttackLog;
 
 class SanitizeInput
 {
     public function handle(Request $request, Closure $next)
     {
-        $patterns = [
+        $waf = app(WafService::class);
+        $ip = $request->ip() ?: '127.0.0.1';
+        $currentPath = $request->path();
 
-            '/DROP/i',
+        // Always allow WAF control panel and static assets
+        if (str_starts_with($currentPath, 'waf-guard') || str_starts_with($currentPath, 'up')) {
+            return $next($request);
+        }
 
-            '/DELETE/i',
+        // Check if IP is currently quarantined
+        if ($waf->isQuarantined($ip)) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'error' => 'WAF_QUARANTINE_ACTIVE',
+                    'message' => 'Your IP address is currently quarantined by the Web Application Firewall due to repeated SQL injection violations.',
+                ], 403);
+            }
 
-            '/INSERT/i',
+            return response()->view('waf.blocked', [
+                'ip' => $ip,
+                'path' => $currentPath,
+            ], 403);
+        }
 
-            '/UPDATE/i',
+        $mode = $waf->getMode();
+        $hasMaliciousPayload = false;
+        $highestAnalysis = null;
 
-            '/ALTER/i',
-
-            '/UNION/i',
-
-            '/SELECT/i',
-
-            '/--/',
-
-            '/;/',
-
-            '/OR\s+1=1/i',
-
-            '/\'\s*OR\s*\'1\'=\'1/i'
-
-        ];
-
-        foreach ($request->all() as $value) {
-
-            if (!is_string($value)) {
+        foreach ($request->all() as $key => $value) {
+            if (!is_string($value) || empty($value)) {
                 continue;
             }
 
-            foreach ($patterns as $pattern) {
+            $analysis = $waf->analyzePayload($value);
 
-                if (preg_match($pattern, $value)) {
+            if ($analysis['is_malicious']) {
+                $hasMaliciousPayload = true;
+                $highestAnalysis = $analysis;
 
-                    Log::warning('SQL Injection Attempt', [
+                // Log into AttackLog
+                AttackLog::create([
+                    'ip_address' => $ip,
+                    'route' => $currentPath,
+                    'payload' => substr($value, 0, 500),
+                    'pattern' => implode(', ', array_column($analysis['matches'], 'rule')),
+                    'method' => $request->method(),
+                ]);
 
-                        'payload' => $value,
+                Log::warning('WAF SQL Injection Detected', [
+                    'ip' => $ip,
+                    'path' => $currentPath,
+                    'score' => $analysis['score'],
+                    'payload' => $value,
+                ]);
 
-                        'ip' => $request->ip(),
+                // If mode is quarantine and score is critical, quarantine immediately
+                if ($mode === WafService::MODE_QUARANTINE && $analysis['score'] >= 50) {
+                    $waf->quarantineIp($ip, 'High-threat SQL Injection signature detected: ' . ($analysis['matches'][0]['rule'] ?? 'Generic'), $value, 30);
+                    
+                    if ($request->expectsJson()) {
+                        return response()->json([
+                            'success' => false,
+                            'error' => 'WAF_QUARANTINED',
+                            'message' => 'Malicious SQL payload detected. Your IP has been temporarily quarantined.',
+                        ], 403);
+                    }
 
-                        'route' => $request->path()
+                    return response()->view('waf.blocked', [
+                        'ip' => $ip,
+                        'path' => $currentPath,
+                    ], 403);
+                }
 
-                    ]);
-
-                    AttackLog::create([
-
-                        'ip_address' => $request->ip(),
-
-                        'route' => $request->path(),
-
-                        'payload' => $value,
-
-                        'pattern' => $pattern,
-
-                        'method' => $request->method()
-
-                    ]);
-
-                    break;
+                // If mode is sanitize, clean the input in place
+                if ($mode === WafService::MODE_SANITIZE) {
+                    $cleanValue = $waf->sanitizeText($value);
+                    $request->merge([$key => $cleanValue]);
                 }
             }
         }
